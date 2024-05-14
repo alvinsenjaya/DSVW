@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import html, http.client, http.server, io, json, os, pickle, random, re, socket, socketserver, sqlite3, string, sys, subprocess, time, traceback, urllib.parse, urllib.request, xml.etree.ElementTree  # Python 3 required
+import bleach
+from urllib.parse import urlparse
 try:
     import lxml.etree
 except ImportError:
@@ -27,16 +29,46 @@ class ReqHandler(http.server.BaseHTTPRequestHandler):
         try:
             if path == '/':
                 if "id" in params:
-                    cursor.execute("SELECT id, username, name, surname FROM users WHERE id=" + params["id"])
+                    cursor.execute("SELECT id, username, name, surname FROM users WHERE id=?", (params["id"],))
+                    #cursor.execute("SELECT id, username, name, surname FROM users WHERE id=" + params["id"])
                     content += "<div><span>Result(s):</span></div><table><thead><th>id</th><th>username</th><th>name</th><th>surname</th></thead>%s</table>%s" % ("".join("<tr>%s</tr>" % "".join("<td>%s</td>" % ("-" if _ is None else _) for _ in row) for row in cursor.fetchall()), HTML_POSTFIX)
                 elif "v" in params:
-                    content += re.sub(r"(v<b>)[^<]+(</b>)", r"\g<1>%s\g<2>" % params["v"], HTML_POSTFIX)
+                    sanitized_v = bleach.clean(params["v"], tags=[], attributes={}, strip=True)
+                    content += re.sub(r"(v<b>)[^<]+(</b>)", r"\g<1>%s\g<2>" % sanitized_v, HTML_POSTFIX)
+                    #content += re.sub(r"(v<b>)[^<]+(</b>)", r"\g<1>%s\g<2>" % params["v"], HTML_POSTFIX)
                 elif "object" in params:
                     content = str(pickle.loads(params["object"].encode()))
                 elif "path" in params:
-                    content = (open(os.path.abspath(params["path"]), "rb") if not "://" in params["path"] else urllib.request.urlopen(params["path"])).read().decode()
+                    BASE_DIR = '/var/www/html'
+                    user_path = params.get("path", "")
+                    parsed_url = urlparse(user_path)
+                    if parsed_url.scheme in ['http', 'https', 'ftp']:
+                        # Handle URL input
+                        with urllib.request.urlopen(user_path) as response:
+                            content = response.read().decode()
+                    else:
+                        # Normalize the path to prevent traversal
+                        normalized_path = os.path.normpath(user_path)
+
+                        # Ensure the path is within the allowed directory
+                        full_path = os.path.join(BASE_DIR, normalized_path)
+                        full_path = os.path.abspath(full_path)
+
+                        if not full_path.startswith(os.path.abspath(BASE_DIR)):
+                            raise ValueError("Invalid path: Path traversal detected")
+
+                        # Read the file content
+                        with open(full_path, "rb") as file:
+                            content = file.read().decode()
+
+                    #content = (open(os.path.abspath(params["path"]), "rb") if not "://" in params["path"] else urllib.request.urlopen(params["path"])).read().decode()
                 elif "domain" in params:
-                    content = subprocess.check_output("nslookup " + params["domain"], shell=True, stderr=subprocess.STDOUT, stdin=subprocess.PIPE).decode()
+                    domain = params.get("domain")
+                    try:
+                        content = subprocess.check_output(["nslookup", domain], stderr=subprocess.STDOUT, stdin=subprocess.PIPE).decode()
+                    except subprocess.CalledProcessError as e:
+                        content = e.output.decode()
+                    #content = subprocess.check_output("nslookup " + params["domain"], shell=True, stderr=subprocess.STDOUT, stdin=subprocess.PIPE).decode()
                 elif "xml" in params:
                     content = lxml.etree.tostring(lxml.etree.parse(io.BytesIO(params["xml"].encode()), lxml.etree.XMLParser(no_network=False)), pretty_print=True).decode()
                 elif "name" in params:
