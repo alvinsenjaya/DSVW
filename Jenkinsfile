@@ -137,7 +137,7 @@ pipeline {
             }
             steps {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh 'nuclei -u http://$TARGET_IP:65412 -nc -j > nuclei-report.json'
+                    sh 'nuclei -u http://$DEPLOYMENT_TARGET_IP:65412 -nc -j > nuclei-report.json'
                     sh 'cat nuclei-report.json'
                 }
                 archiveArtifacts artifacts: 'nuclei-report.json'
@@ -152,7 +152,7 @@ pipeline {
             }
             steps {
                 catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh 'zap-baseline.py -t http://$TARGET_IP:65412 -r zapbaseline.html -x zapbaseline.xml'
+                    sh 'zap-baseline.py -t http://$DEPLOYMENT_TARGET_IP:65412 -r zapbaseline.html -x zapbaseline.xml'
                 }
                 sh 'cp /zap/wrk/zapbaseline.html ./zapbaseline.html'
                 sh 'cp /zap/wrk/zapbaseline.xml ./zapbaseline.xml'
