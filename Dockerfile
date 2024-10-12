@@ -8,7 +8,6 @@ RUN python3 -m ensurepip --upgrade && python3 -m pip install pex~=2.1.47
 RUN mkdir /source
 COPY requirements.txt /source/
 RUN pex -r /source/requirements.txt -o /source/pex_wrapper
-RUN chmod +x /source/pex_wrapper
 
 FROM python:3.10-alpine3.18 AS final
 
@@ -18,7 +17,8 @@ RUN adduser -D dsvw && chown -R dsvw:dsvw /dsvw
 
 COPY dsvw.py .
 RUN sed -i 's/127.0.0.1/0.0.0.0/g' dsvw.py
-COPY --from=build /source /
+# Ensure the pex_wrapper is copied to the correct location
+COPY --from=build /source/pex_wrapper /dsvw/pex_wrapper
 
 EXPOSE 65412
 USER dsvw
