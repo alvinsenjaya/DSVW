@@ -8,6 +8,7 @@ RUN python3 -m ensurepip --upgrade && python3 -m pip install pex~=2.1.47
 RUN mkdir /source
 COPY requirements.txt /source/
 RUN pex -r /source/requirements.txt -o /source/pex_wrapper
+RUN chmod +x /source/pex_wrapper
 
 FROM python:3.10-alpine3.18 AS final
 
