@@ -123,8 +123,8 @@ pipeline {
                 withCredentials([sshUserPrivateKey(credentialsId: "DeploymentSSHKey", keyFileVariable: 'keyfile')]) {
                     sh 'ssh -i ${keyfile} -o StrictHostKeyChecking=no $DEPLOYMENT_USERNAME@$DEPLOYMENT_TARGET_IP "echo \$DOCKERHUB_CREDENTIALS_PSW | docker login -u \$DOCKERHUB_CREDENTIALS_USR --password-stdin"'
                     sh 'ssh -i ${keyfile} -o StrictHostKeyChecking=no $DEPLOYMENT_USERNAME@$DEPLOYMENT_TARGET_IP docker pull xenjutsu/dsvw:0.1'
-                    sh 'ssh -i ${keyfile} -o StrictHostKeyChecking=no $DEPLOYMENT_USERNAME@$DEPLOYMENT_TARGET_IP docker rm --force dsvw'
-                    sh 'ssh -i ${keyfile} -o StrictHostKeyChecking=no $DEPLOYMENT_USERNAME@$DEPLOYMENT_TARGET_IP docker run -it --detach --name dsvw --network host xenjutsu/dsvw:0.1'
+                    sh 'ssh -i ${keyfile} -o StrictHostKeyChecking=no $DEPLOYMENT_USERNAME@$DEPLOYMENT_TARGET_IP docker rm -f dsvw'
+                    sh 'ssh -i ${keyfile} -o StrictHostKeyChecking=no $DEPLOYMENT_USERNAME@$DEPLOYMENT_TARGET_IP docker run --detach --name dsvw -p 65412:65412 xenjutsu/dsvw:0.1'
                 }
             }
         }
