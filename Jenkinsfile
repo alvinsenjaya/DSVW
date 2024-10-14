@@ -5,7 +5,7 @@ pipeline {
         SNYK_CREDENTIALS = credentials('SnykToken')
         SONARQUBE_CREDENTIALS = credentials('SonarToken')
         DEPLOYMENT_USERNAME = 'jtf01645'     // Variable for deployment username
-        DEPLOYMENT_TARGET_IP = '192.168.1.19' // Variable for deployment target IP
+        DEPLOYMENT_TARGET_IP = '192.168.1.24' // Variable for deployment target IP
         SONARQUBE_SERVER_IP = '192.168.1.19'  // Variable for SonarQube server IP
     }
     stages {
