@@ -4,9 +4,9 @@ pipeline {
         DOCKERHUB_CREDENTIALS = credentials('DockerLogin')
         SNYK_CREDENTIALS = credentials('SnykToken')
         SONARQUBE_CREDENTIALS = credentials('SonarToken')
-        DEPLOYMENT_USERNAME = 'jtf01645'     // Variable for deployment username
-        DEPLOYMENT_TARGET_IP = '192.168.1.24' // Variable for deployment target IP
-        SONARQUBE_SERVER_IP = '192.168.1.24'  // Variable for SonarQube server IP
+        DEPLOYMENT_USERNAME = 'ubuntu'     // Variable for deployment username
+        DEPLOYMENT_TARGET_IP = '192.168.0.17' // Variable for deployment target IP
+        SONARQUBE_SERVER_IP = '192.168.0.18'  // Variable for SonarQube server IP
     }
     stages {
         stage('Secret Scanning Using Trufflehog') {
