@@ -39,21 +39,6 @@ pipeline {
                 archiveArtifacts artifacts: 'snyk-scan-report.json'
             }
         }
-        stage('SCA Retire Js') {
-            agent {
-                docker {
-                    image 'node:lts-buster-slim'
-                }
-            }
-            steps {
-                sh 'npm install retire'
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh './node_modules/retire/lib/cli.js --outputformat json --outputpath retire-scan-report.json'
-                }
-                sh 'cat retire-scan-report.json'
-                archiveArtifacts artifacts: 'retire-scan-report.json'
-            }
-        }
         stage('SCA Trivy Scan Dockerfile Misconfiguration') {
             agent {
                 docker {
