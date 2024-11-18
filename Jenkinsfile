@@ -161,9 +161,9 @@ pipeline {
     post {
         always {
             node('built-in') {
-                sh 'curl -X POST http://192.168.0.20:8080/api/v2/import-scan/ -H "Authorization: Token 3a094d8299155a1a5719fcd1cfe2a63b9dda26f5" -F "scan_type=Trufflehog Scan" -F "file=@./trufflehog-scan-result.json;type=application/json" -F "engagement=2"'
-                sh 'curl -X POST http://192.168.0.20:8080/api/v2/import-scan/ -H "Authorization: Token 3a094d8299155a1a5719fcd1cfe2a63b9dda26f5" -F "scan_type=Snyk Code Scan" -F "file=@./snyk-sast-report.json;type=application/json" -F "engagement=2"'
-                sh 'curl -X POST http://192.168.0.20:8080/api/v2/import-scan/ -H "Authorization: Token 3a094d8299155a1a5719fcd1cfe2a63b9dda26f5" -F "scan_type=ZAP Scan" -F "file=@./zapbaseline.xml;type=text/xml" -F "engagement=2"'
+                sh 'curl -X POST http://192.168.0.20:8080/api/v2/import-scan/ -H "Authorization: Token 3a094d8299155a1a5719fcd1cfe2a63b9dda26f5" -F "scan_type=Trufflehog Scan" -F "file=@./trufflehog-scan-result.json;type=application/json" -F "engagement=3"'
+                sh 'curl -X POST http://192.168.0.20:8080/api/v2/import-scan/ -H "Authorization: Token 3a094d8299155a1a5719fcd1cfe2a63b9dda26f5" -F "scan_type=Snyk Code Scan" -F "file=@./snyk-sast-report.json;type=application/json" -F "engagement=3"'
+                sh 'curl -X POST http://192.168.0.20:8080/api/v2/import-scan/ -H "Authorization: Token 3a094d8299155a1a5719fcd1cfe2a63b9dda26f5" -F "scan_type=ZAP Scan" -F "file=@./zapbaseline.xml;type=text/xml" -F "engagement=3"'
             }
         }
     }
