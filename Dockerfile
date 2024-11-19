@@ -1,6 +1,6 @@
 # Example: docker build . -t dsvw && docker run -p 65412:65412 dsvw
 
-FROM python:3.10-alpine3.18 AS build
+FROM python:3.13.0b1-alpine3.18 AS build
 
 RUN apk --no-cache add libxml2-dev libxslt-dev gcc python3 python3-dev py3-pip musl-dev linux-headers
 
@@ -9,7 +9,7 @@ RUN mkdir /source
 COPY requirements.txt /source/
 RUN pex -r /source/requirements.txt -o /source/pex_wrapper
 
-FROM python:3.10-alpine3.18 AS final
+FROM python:3.13.0b1-alpine3.18 AS final
 
 RUN apk upgrade --no-cache
 WORKDIR /dsvw
