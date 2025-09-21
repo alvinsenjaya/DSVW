@@ -3,10 +3,8 @@ pipeline {
     environment {
         DOCKERHUB_CREDENTIALS = credentials('DockerLogin')
         SNYK_CREDENTIALS = credentials('SnykToken')
-        SONARQUBE_CREDENTIALS = credentials('SonarToken')
-        DEPLOYMENT_USERNAME = 'ubuntu'     // Variable for deployment username
-        DEPLOYMENT_TARGET_IP = '192.168.0.17' // Variable for deployment target IP
-        SONARQUBE_SERVER_IP = '192.168.0.18'  // Variable for SonarQube server IP
+        DEPLOYMENT_USERNAME = 'ubuntu'
+        DEPLOYMENT_TARGET_IP = '192.168.0.12'
     }
     stages {
         stage('Secret Scanning Using Trufflehog') {
@@ -69,19 +67,6 @@ pipeline {
                 archiveArtifacts artifacts: 'snyk-sast-report.json'
             }
         }
-        stage('SAST SonarQube') {
-            agent {
-                docker {
-                    image 'sonarsource/sonar-scanner-cli:latest'
-                    args '--network host -v ".:/usr/src" --entrypoint='
-                }
-            }
-            steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh "sonar-scanner -Dsonar.projectKey=dsvw -Dsonar.qualitygate.wait=true -Dsonar.sources=. -Dsonar.host.url=http://$SONARQUBE_SERVER_IP:9000 -Dsonar.token=$SONARQUBE_CREDENTIALS_PSW"
-                }
-            }
-        }
         stage('Build Docker Image and Push to Docker Registry') {
             agent {
                 docker {
@@ -123,47 +108,6 @@ pipeline {
                     sh 'wapiti -u http://$DEPLOYMENT_TARGET_IP:65412 -f xml -o wapiti-report.xml'
                 }
                 archiveArtifacts artifacts: 'wapiti-report.xml'
-            }
-        }
-        stage('DAST Nuclei') {
-            agent {
-                docker {
-                    image 'projectdiscovery/nuclei'
-                    args '--user root --network host --entrypoint='
-                }
-            }
-            steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh 'nuclei -u http://$DEPLOYMENT_TARGET_IP:65412 -nc -j > nuclei-report.json'
-                    sh 'cat nuclei-report.json'
-                }
-                archiveArtifacts artifacts: 'nuclei-report.json'
-            }
-        }
-        stage('DAST OWASP ZAP') {
-            agent {
-                docker {
-                    image 'ghcr.io/zaproxy/zaproxy:weekly'
-                    args '-u root --network host -v /var/run/docker.sock:/var/run/docker.sock --entrypoint= -v .:/zap/wrk/:rw'
-                }
-            }
-            steps {
-                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-                    sh 'zap-baseline.py -t http://$DEPLOYMENT_TARGET_IP:65412 -r zapbaseline.html -x zapbaseline.xml'
-                }
-                sh 'cp /zap/wrk/zapbaseline.html ./zapbaseline.html'
-                sh 'cp /zap/wrk/zapbaseline.xml ./zapbaseline.xml'
-                archiveArtifacts artifacts: 'zapbaseline.html'
-                archiveArtifacts artifacts: 'zapbaseline.xml'
-            }
-        }
-    }
-    post {
-        always {
-            node('built-in') {
-                sh 'curl -X POST http://192.168.0.20:8080/api/v2/import-scan/ -H "Authorization: Token 3a094d8299155a1a5719fcd1cfe2a63b9dda26f5" -F "scan_type=Trufflehog Scan" -F "file=@./trufflehog-scan-result.json;type=application/json" -F "engagement=3"'
-                sh 'curl -X POST http://192.168.0.20:8080/api/v2/import-scan/ -H "Authorization: Token 3a094d8299155a1a5719fcd1cfe2a63b9dda26f5" -F "scan_type=Snyk Code Scan" -F "file=@./snyk-sast-report.json;type=application/json" -F "engagement=3"'
-                sh 'curl -X POST http://192.168.0.20:8080/api/v2/import-scan/ -H "Authorization: Token 3a094d8299155a1a5719fcd1cfe2a63b9dda26f5" -F "scan_type=ZAP Scan" -F "file=@./zapbaseline.xml;type=text/xml" -F "engagement=3"'
             }
         }
     }
