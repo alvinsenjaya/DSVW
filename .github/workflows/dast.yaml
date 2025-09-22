@@ -66,7 +66,7 @@ jobs:
             --rm \
             --network host \
             -v ${{ github.workspace }}:/app \
-            xenjutsu/wapiti:3.2.0 -u http://localhost:3000/ -f html -o /app/dast-report.html
+            xenjutsu/wapiti:3.2.0 -u http://localhost:65412/ -f html -o /app/dast-report.html
         # Runs the DAST scan using a pre-built Wapiti Docker image.
         # The 'wapiti' command is REMOVED from the arguments because it's the image's entrypoint.
         # --rm: Automatically removes the container when it finishes.
