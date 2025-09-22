@@ -60,12 +60,6 @@ jobs:
           sleep 15 # Increased sleep time slightly for potentially slower startup on shared runners
         # Gives the application inside the container some time to initialize before scanning.
 
-      - name: Install Wapiti
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y wapiti
-        # Installs the Wapiti DAST scanner on the Ubuntu runner.
-
       - name: Run Wapiti DAST Scan from Docker
         run: |
           docker run \
