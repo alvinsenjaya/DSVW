@@ -1,0 +1,84 @@
+# This workflow defines a CI/CD pipeline that builds a Docker image,
+# pushes it to a registry, deploys it locally on the runner, and then
+# performs a Dynamic Application Security Testing (DAST) scan.
+
+name: Build, Deploy, and DAST Scan for DSVW
+
+on:
+  push:
+    branches: [ "master" ] # Triggers on push events to the master branch
+  pull_request:
+    branches: [ "master" ] # Triggers on pull requests targeting the master branch
+
+jobs:
+  build_deploy_scan:
+    name: Build, Deploy, and Scan
+    runs-on: ubuntu-latest # This job runs on a GitHub-hosted Ubuntu runner
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        # Sets up Docker Buildx for more efficient builds
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+        # Logs into Docker Hub using secrets stored in your repository settings
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: xenjutsu/dsvw:0.1
+        # Builds the Docker image and pushes it to Docker Hub
+        # with multiple tags for better version management.
+
+      - name: Stop and Remove Existing Container
+        run: |
+          docker stop dsvw-app || true
+          docker rm dsvw-app || true
+        # Stops and removes the container from a previous run.
+        # The name 'dsvw-app' now matches the application.
+        # '|| true' ensures the workflow doesn't fail if the container isn't found.
+
+      - name: Run New Docker Container
+        run: |
+          docker run -d --name dsvw-app -p 65412:65412 xenjutsu/dsvw:0.1
+        # Runs the correct Docker image (xenjutsu/dsvw:0.1).
+        # The container name is now consistent.
+
+      - name: Wait for Application to Start
+        run: |
+          echo "Waiting for the application to be ready..."
+          sleep 15 # Increased sleep time slightly for potentially slower startup on shared runners
+        # Gives the application inside the container some time to initialize before scanning.
+
+      - name: Install Wapiti
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wapiti
+        # Installs the Wapiti DAST scanner on the Ubuntu runner.
+
+      - name: Run Wapiti DAST Scan
+        run: |
+          wapiti -u http://localhost:65412/ -f html -o dast-report.html
+        # Runs the DAST scan against the application running on localhost:3000.
+        # It generates an HTML report named 'dast-report.html'.
+        # The '--scope page' limits the scan to the initial URL to keep it quick.
+        # You can adjust the scope and other parameters as needed.
+
+      - name: Upload DAST Scan Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dast-scan-report
+          path: dast-report.html
+        # Uploads the generated 'dast-report.html' as a workflow artifact.
+        # You can download it from the summary page of the workflow run.
+
