@@ -72,13 +72,12 @@ jobs:
             --rm \
             --network host \
             -v ${{ github.workspace }}:/app \
-            xenjutsu/wapiti:3.2.0 \
-            wapiti -u http://localhost:65412/ -f html -o /app/dast-report.html
+            xenjutsu/wapiti:3.2.0 -u http://localhost:3000/ -f html -o /app/dast-report.html
         # Runs the DAST scan using a pre-built Wapiti Docker image.
+        # The 'wapiti' command is REMOVED from the arguments because it's the image's entrypoint.
         # --rm: Automatically removes the container when it finishes.
         # --network host: Allows the Wapiti container to access the dsvw-app on localhost.
-        # -v: Mounts the runner's workspace into the /app directory in the container
-        #     so the generated report is saved back to the runner for artifact upload.
+        # -v: Mounts the runner's workspace into the container so the report can be saved.
 
       - name: Upload DAST Scan Report
         uses: actions/upload-artifact@v4
