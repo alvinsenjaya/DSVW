@@ -66,13 +66,19 @@ jobs:
           sudo apt-get install -y wapiti
         # Installs the Wapiti DAST scanner on the Ubuntu runner.
 
-      - name: Run Wapiti DAST Scan
+      - name: Run Wapiti DAST Scan from Docker
         run: |
-          wapiti -u http://localhost:65412/ -f html -o dast-report.html
-        # Runs the DAST scan against the application running on localhost:3000.
-        # It generates an HTML report named 'dast-report.html'.
-        # The '--scope page' limits the scan to the initial URL to keep it quick.
-        # You can adjust the scope and other parameters as needed.
+          docker run \
+            --rm \
+            --network host \
+            -v ${{ github.workspace }}:/app \
+            xenjutsu/wapiti:3.2.0 \
+            wapiti -u http://localhost:65412/ -f html -o /app/dast-report.html
+        # Runs the DAST scan using a pre-built Wapiti Docker image.
+        # --rm: Automatically removes the container when it finishes.
+        # --network host: Allows the Wapiti container to access the dsvw-app on localhost.
+        # -v: Mounts the runner's workspace into the /app directory in the container
+        #     so the generated report is saved back to the runner for artifact upload.
 
       - name: Upload DAST Scan Report
         uses: actions/upload-artifact@v4
@@ -80,5 +86,5 @@ jobs:
           name: dast-scan-report
           path: dast-report.html
         # Uploads the generated 'dast-report.html' as a workflow artifact.
-        # You can download it from the summary page of the workflow run.
+        # This step works because the previous step saved the report in the workspace.
 
