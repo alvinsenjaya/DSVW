@@ -30,20 +30,19 @@ jobs:
           pip install -r requirements.txt
           pip install bandit safety pip-audit
       
-      # Analyzes your actual Python code for vulnerabilities
       - name: SAST - Run Bandit
         continue-on-error: true 
+        # Added '-f txt' for clean, human-readable terminal output
         run: |
-          bandit -r . -ll -ii
+          bandit -r . -ll -ii -f txt
       
-      # Checks your requirements.txt against the PyPA vulnerability database
       - name: SCA - Run pip-audit
         continue-on-error: true
         run: |
           pip-audit -r requirements.txt
       
-      # Checks your installed dependencies against the Safety vulnerability database
-      - name: SCA - Run Safety
+      - name: SCA - Run Safety (Updated)
         continue-on-error: true
+        # Swapped 'check' for 'scan' to resolve the deprecation warning
         run: |
-          safety check -r requirements.txt
+          safety scan -r requirements.txt
