@@ -28,21 +28,30 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install bandit safety pip-audit
+          pip install bandit pip-audit
       
+      # 1. Scan custom code
       - name: SAST - Run Bandit
         continue-on-error: true 
-        # Added '-f txt' for clean, human-readable terminal output
         run: |
           bandit -r . -ll -ii -f txt
       
+      # 2. Scan dependencies (PyPA tool)
       - name: SCA - Run pip-audit
         continue-on-error: true
         run: |
           pip-audit -r requirements.txt
-      
-      - name: SCA - Run Safety (Updated)
-        continue-on-error: true
-        # Swapped 'check' for 'scan' to resolve the deprecation warning
+
+      # 3. Setup OSV-Scanner (Google's Safety Alternative)
+      - name: Install OSV-Scanner
         run: |
-          safety scan -r requirements.txt
+          curl -sL https://github.com/google/osv-scanner/releases/latest/download/osv-scanner_linux_amd64 -o osv-scanner
+          chmod +x osv-scanner
+          sudo mv osv-scanner /usr/local/bin/
+          
+      # 4. Scan dependencies (OSV-Scanner)
+      - name: SCA - Run OSV-Scanner
+        continue-on-error: true
+        run: |
+          # The -r flag recursively scans your repository for requirements.txt files
+          osv-scanner -r .
