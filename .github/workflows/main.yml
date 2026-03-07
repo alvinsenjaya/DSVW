@@ -55,3 +55,23 @@ jobs:
         run: |
           # The -r flag recursively scans your repository for requirements.txt files
           osv-scanner -r .
+
+  docker_build:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: [security-scans]
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Login to DockerHub
+        run: echo "${{ env.DOCKERHUB_PASSWORD }}" | docker login -u "${{ env.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Build Docker Image
+        run: docker build -t xenjutsu/dsvw:0.1 .
+
+      - name: Push Docker Image
+        run: docker push xenjutsu/dsvw:0.1
