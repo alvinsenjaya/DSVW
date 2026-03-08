@@ -1,2 +1,2 @@
 lxml
-chat-xdk==1.0.0
+mcp-memory-service==10.25.0
