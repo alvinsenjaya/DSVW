@@ -1,2 +1,2 @@
 lxml
-chat-xdk=1.0.0
+chat-xdk==1.0.0
